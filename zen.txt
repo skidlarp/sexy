@@ -1,0 +1,121 @@
+--[[
+ .____                  ________ ___.    _____                           __                
+ |    |    __ _______   \_____  \\_ |___/ ____\_ __  ______ ____ _____ _/  |_  ___________ 
+ |    |   |  |  \__  \   /   |   \| __ \   __\  |  \/  ___// ___\\__  \\   __\/  _ \_  __ \
+ |    |___|  |  // __ \_/    |    \ \_\ \  | |  |  /\___ \\  \___ / __ \|  | (  <_> )  | \/
+ |_______ \____/(____  /\_______  /___  /__| |____//____  >\___  >____  /__|  \____/|__|   
+         \/          \/         \/    \/                \/     \/     \/                   
+          \_Welcome to LuaObfuscator.com   (Alpha 0.10.9) ~  Much Love, Ferib 
+
+]]--
+
+local v0 = game:GetService("HttpService");
+local v1 = game:GetService("Players");
+local v2 = game:GetService("RunService");
+local v3 = game:GetService("UserInputService");
+local v4 = game:GetService("CoreGui");
+local v5 = v1.LocalPlayer;
+local v6 = false;
+local v7 = 309 - (133 + 76);
+local v8;
+local v9;
+local v10;
+local v11 = false;
+local v12 = 1665 - (1594 + 61);
+local v13 = false;
+local v14 = nil;
+local v15 = 1671 - (108 + 1553);
+local v16 = 513 - (232 + 281);
+local v17 = false;
+local v18 = false;
+local v19 = {};
+local v20 = Instance.new("Folder");
+v20.Name = "ESPFolder";
+v20.Parent = v4;
+local v23 = false;
+local v24 = nil;
+local v25 = Instance.new("ScreenGui");
+v25.Name = "RobloxPromptGui";
+v25.Parent = v4;
+v25.ResetOnSpawn = false;
+local v29 = Instance.new("Frame");
+v29.Size = UDim2.new(1253 - (976 + 277), 639 - 279, 957 - (892 + 65), 180);
+v29.Position = UDim2.new(0.5 - 0, -(332 - 152), 0.5, -(165 - 75));
+v29.BackgroundColor3 = Color3.fromRGB(94 - 74, 370 - (87 + 263), 200 - (67 + 113));
+v29.BorderSizePixel = 0 + 0;
+v29.BackgroundTransparency = 0.1;
+v29.Parent = v25;
+v29.AnchorPoint = Vector2.new(0.5 - 0, 766.5 - (745 + 21));
+v29.ClipsDescendants = true;
+local v38 = Instance.new("UICorner", v29);
+v38.CornerRadius = UDim.new(0, 4 + 6);
+local v40 = Instance.new("UIStroke", v29);
+v40.Thickness = 2 + 0;
+v40.Color = Color3.fromRGB(238 - 178, 1012 - (802 + 150), 161 - 101);
+local v43 = Instance.new("TextLabel");
+v43.Size = UDim2.new(1, -(36 - 16), 0 - 0, 37 + 3);
+v43.Position = UDim2.new(0 + 0, 1007 - (915 + 82), 0 - 0, 6 + 4);
+v43.BackgroundTransparency = 1 - 0;
+v43.Text = "🔐 Input Key";
+v43.Font = Enum.Font.GothamBold;
+v43.TextColor3 = Color3.fromRGB(698 - 443, 1442 - (1069 + 118), 578 - 323);
+v43.TextSize = 39 - 21;
+v43.TextWrapped = true;
+v43.TextXAlignment = Enum.TextXAlignment.Center;
+v43.Parent = v29;
+local v56 = Instance.new("TextBox");
+v56.Size = UDim2.new(0 + 0, 300, 0 - 0, 35 + 0);
+v56.Position = UDim2.new(791.5 - (368 + 423), -(471 - 321), 18 - (10 + 8), 249 - 184);
+v56.BackgroundColor3 = Color3.fromRGB(477 - (416 + 26), 111 - 76, 16 + 19);
+v56.TextColor3 = Color3.new(1 + 0, 1 - 0, 439 - (145 + 293));
+v56.PlaceholderText = "Enter Key...";
+v56.Font = Enum.Font.Gotham;
+v56.TextSize = 14 + 2;
+v56.ClearTextOnFocus = false;
+v56.Parent = v29;
+local v67 = Instance.new("UICorner", v56);
+v67.CornerRadius = UDim.new(254 - (163 + 91), 438 - (44 + 386));
+local v69 = Instance.new("TextButton");
+v69.Size = UDim2.new(1486 - (998 + 488), 34 + 86, 0 + 0, 53 - 18);
+v69.Position = UDim2.new(0.5, -(9 + 51), 1 + 0, -(822 - (201 + 571)));
+v69.BackgroundColor3 = Color3.fromRGB(60, 1604 - (1329 + 145), 90);
+v69.Text = "✅ Submit";
+v69.Font = Enum.Font.GothamBold;
+v69.TextSize = 16;
+v69.TextColor3 = Color3.new(972 - (140 + 831), 1851 - (1409 + 441), 1139 - (116 + 1022));
+v69.Parent = v29;
+local v78 = Instance.new("UICorner", v69);
+v78.CornerRadius = UDim.new(0 - 0, 5 + 3);
+v69.MouseButton1Click:Connect(function()
+	local v80 = v56.Text;
+	if (v80 == "") then
+		return;
+	end
+	local v81, v82 = pcall(function()
+		return game:HttpGet("https://scars.cfd/key.txt");
+	end);
+	if (v81 and v82 and v82:find(v80)) then
+		local v83 = 438 - (262 + 176);
+		while true do
+			if (v83 == (0 - 0)) then
+				v29:Destroy();
+				loadstring(game:HttpGet("https://pastebin.com/raw/WcuBZBRU"))();
+				break;
+			end
+		end
+	else
+		local v84 = 0 - 0;
+		while true do
+			if ((1721 - (345 + 1376)) == v84) then
+				v43.Text = "❌ Invalid Key. Please try again.";
+				v43.TextColor3 = Color3.fromRGB(1114 - (814 + 45), 172 - 102, 167 - 97);
+				break;
+			end
+		end
+	end
+end);
+v24 = v3.JumpRequest:Connect(function()
+	if (v23 and v5.Character and v5.Character:FindFirstChildOfClass("Humanoid")) then
+		v5.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping);
+	end
+end);
