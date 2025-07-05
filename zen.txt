@@ -1,1 +1,647 @@
 
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+
+local localPlayer = Players.LocalPlayer
+local flying = false
+local speed = 100
+local bodyVelocity
+local bodyGyro
+local hrp
+
+local spinbotActive = false
+local spinSpeed = 10
+
+local orbitActive = false
+local orbitTarget = nil
+local orbitRadius = 10
+local orbitAngle = 0
+
+local boxEspOn = false
+local nameEspOn = false
+
+local espBoxes = {}
+local espFolder = Instance.new("Folder")
+espFolder.Name = "ESPFolder"
+espFolder.Parent = CoreGui
+
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "RobloxPromptGui"
+screenGui.Parent = CoreGui
+screenGui.ResetOnSpawn = false
+
+
+local window = Instance.new("Frame")
+window.Size = UDim2.new(0, 450, 0, 440)
+window.Position = UDim2.new(0.5, -225, 0.5, -220)
+window.BackgroundColor3 = Color3.new(0, 0, 0)
+window.BorderSizePixel = 1
+window.BorderColor3 = Color3.new(1,1,1)
+window.Parent = screenGui
+window.Active = true
+window.Draggable = true
+
+
+local titleBar = Instance.new("Frame")
+titleBar.Size = UDim2.new(1, 0, 0, 40)
+titleBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+titleBar.BorderSizePixel = 0
+titleBar.Parent = window
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, -40, 1, 0)
+titleLabel.Position = UDim2.new(0, 10, 0, 0)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "Nucleus ~ Coded By @zen <3"
+titleLabel.TextColor3 = Color3.new(1,1,1)
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextSize = 22
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.Parent = titleBar
+
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 30, 0, 30)
+closeBtn.Position = UDim2.new(1, -35, 0, 5)
+closeBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+closeBtn.Text = "X"
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextSize = 20
+closeBtn.TextColor3 = Color3.new(1,1,1)
+closeBtn.Parent = titleBar
+closeBtn.AutoButtonColor = true
+closeBtn.MouseButton1Click:Connect(function()
+    screenGui.Enabled = false
+end)
+
+
+local function createRow(parent, yPos, labelText, buttonText)
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(1, -20, 0, 30)
+    container.Position = UDim2.new(0, 10, 0, yPos)
+    container.BackgroundTransparency = 1
+    container.Parent = parent
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(0.6, 0, 1, 0)
+    label.Position = UDim2.new(0, 0, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = labelText
+    label.TextColor3 = Color3.new(1,1,1)
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 18
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = container
+
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0.35, 0, 1, 0)
+    button.Position = UDim2.new(0.65, 0, 0, 0)
+    button.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+    button.Text = buttonText
+    button.TextColor3 = Color3.new(1,1,1)
+    button.Font = Enum.Font.GothamBold
+    button.TextSize = 18
+    button.Parent = container
+
+    return container, label, button
+end
+
+ 
+local flyRow, flyLabel, flyToggle = createRow(window, 50, "Fly (WASD + Space/Ctrl)", "Off")
+
+ 
+local speedLabel = Instance.new("TextLabel")
+speedLabel.Size = UDim2.new(0, 130, 0, 25)
+speedLabel.Position = UDim2.new(0, 15, 0, 90)
+speedLabel.BackgroundTransparency = 1
+speedLabel.Text = "Fly Speed: " .. speed
+speedLabel.TextColor3 = Color3.new(1,1,1)
+speedLabel.Font = Enum.Font.Gotham
+speedLabel.TextSize = 16
+speedLabel.TextXAlignment = Enum.TextXAlignment.Left
+speedLabel.Parent = window
+
+local speedSlider = Instance.new("TextBox")
+speedSlider.Size = UDim2.new(0, 100, 0, 25)
+speedSlider.Position = UDim2.new(0, 320, 0, 90)
+speedSlider.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+speedSlider.TextColor3 = Color3.new(1,1,1)
+speedSlider.Font = Enum.Font.Gotham
+speedSlider.TextSize = 16
+speedSlider.Text = tostring(speed)
+speedSlider.ClearTextOnFocus = false
+speedSlider.Parent = window
+
+ 
+local tpLabel = Instance.new("TextLabel")
+tpLabel.Size = UDim2.new(0, 130, 0, 30)
+tpLabel.Position = UDim2.new(0, 3, 0, 130)
+tpLabel.BackgroundTransparency = 1
+tpLabel.Text = "Teleport To Player"
+tpLabel.TextColor3 = Color3.new(1,1,1)
+tpLabel.Font = Enum.Font.Gotham
+tpLabel.TextSize = 18
+tpLabel.TextXAlignment = Enum.TextXAlignment.Left
+tpLabel.Parent = window
+
+local tpDropdown = Instance.new("TextBox")
+tpDropdown.Size = UDim2.new(0, 200, 0, 30)
+tpDropdown.Position = UDim2.new(0, 220, 0, 130)
+tpDropdown.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+tpDropdown.TextColor3 = Color3.new(1,1,1)
+tpDropdown.Font = Enum.Font.Gotham
+tpDropdown.TextSize = 18
+tpDropdown.ClearTextOnFocus = false
+tpDropdown.PlaceholderText = "Select Player"
+tpDropdown.Parent = window
+
+local tpBtn = Instance.new("TextButton")
+tpBtn.Size = UDim2.new(0, 70, 0, 30)
+tpBtn.Position = UDim2.new(0, 430, 0, 130)
+tpBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+tpBtn.Text = "Teleport"
+tpBtn.TextColor3 = Color3.new(1,1,1)
+tpBtn.Font = Enum.Font.GothamBold
+tpBtn.TextSize = 18
+tpBtn.Parent = window
+
+
+local spinRow, spinLabel, spinToggle = createRow(window, 170, "Spinbot", "Off")
+
+local spinSpeedLabel = Instance.new("TextLabel")
+spinSpeedLabel.Size = UDim2.new(0, 130, 0, 25)
+spinSpeedLabel.Position = UDim2.new(0, 15, 0, 210)
+spinSpeedLabel.BackgroundTransparency = 1
+spinSpeedLabel.Text = "Spinbot Speed: " .. spinSpeed
+spinSpeedLabel.TextColor3 = Color3.new(1,1,1)
+spinSpeedLabel.Font = Enum.Font.Gotham
+spinSpeedLabel.TextSize = 16
+spinSpeedLabel.TextXAlignment = Enum.TextXAlignment.Left
+spinSpeedLabel.Parent = window
+
+local spinSpeedSlider = Instance.new("TextBox")
+spinSpeedSlider.Size = UDim2.new(0, 100, 0, 25)
+spinSpeedSlider.Position = UDim2.new(0, 320, 0, 210)
+spinSpeedSlider.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+spinSpeedSlider.TextColor3 = Color3.new(1,1,1)
+spinSpeedSlider.Font = Enum.Font.Gotham
+spinSpeedSlider.TextSize = 16
+spinSpeedSlider.Text = tostring(spinSpeed)
+spinSpeedSlider.ClearTextOnFocus = false
+spinSpeedSlider.Parent = window
+
+
+local orbitRow, orbitLabel, orbitToggle = createRow(window, 250, "Orbit Player", "Off")
+
+local orbitRadiusLabel = Instance.new("TextLabel")
+orbitRadiusLabel.Size = UDim2.new(0, 130, 0, 25)
+orbitRadiusLabel.Position = UDim2.new(0, 15, 0, 290)
+orbitRadiusLabel.BackgroundTransparency = 1
+orbitRadiusLabel.Text = "Orbit Radius: " .. orbitRadius
+orbitRadiusLabel.TextColor3 = Color3.new(1,1,1)
+orbitRadiusLabel.Font = Enum.Font.Gotham
+orbitRadiusLabel.TextSize = 16
+orbitRadiusLabel.TextXAlignment = Enum.TextXAlignment.Left
+orbitRadiusLabel.Parent = window
+
+local orbitRadiusSlider = Instance.new("TextBox")
+orbitRadiusSlider.Size = UDim2.new(0, 100, 0, 25)
+orbitRadiusSlider.Position = UDim2.new(0, 320, 0, 290)
+orbitRadiusSlider.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+orbitRadiusSlider.TextColor3 = Color3.new(1,1,1)
+orbitRadiusSlider.Font = Enum.Font.Gotham
+orbitRadiusSlider.TextSize = 16
+orbitRadiusSlider.Text = tostring(orbitRadius)
+orbitRadiusSlider.ClearTextOnFocus = false
+orbitRadiusSlider.Parent = window
+
+local orbitDropdown = Instance.new("TextBox")
+orbitDropdown.Size = UDim2.new(0, 200, 0, 30)
+orbitDropdown.Position = UDim2.new(0, 220, 0, 330)
+orbitDropdown.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+orbitDropdown.TextColor3 = Color3.new(1,1,1)
+orbitDropdown.Font = Enum.Font.Gotham
+orbitDropdown.TextSize = 18
+orbitDropdown.ClearTextOnFocus = false
+orbitDropdown.PlaceholderText = "Select Player"
+orbitDropdown.Parent = window
+
+
+local boxRow, boxLabel, boxToggle = createRow(window, 365, "Box ESP", "Off")
+
+
+local nameRow, nameLabel, nameToggle = createRow(window, 405, "Name ESP", "Off")
+
+
+
+ 
+local function createScrollableDropdown(parentTextbox)
+    local dropdownFrame = Instance.new("Frame")
+    dropdownFrame.Size = UDim2.new(0, parentTextbox.Size.X.Offset, 0, 100)
+    dropdownFrame.Position = parentTextbox.Position + UDim2.new(0, 0, 0, parentTextbox.Size.Y.Offset)
+    dropdownFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    dropdownFrame.BorderSizePixel = 1
+    dropdownFrame.Visible = false
+    dropdownFrame.Parent = parentTextbox.Parent
+
+    local scrolling = Instance.new("ScrollingFrame")
+    scrolling.Size = UDim2.new(1, 0, 1, 0)
+    scrolling.CanvasSize = UDim2.new(0, 0, 0, 0)
+    scrolling.ScrollBarThickness = 6
+    scrolling.BackgroundTransparency = 1
+    scrolling.BorderSizePixel = 0
+    scrolling.Parent = dropdownFrame
+
+    local layout = Instance.new("UIListLayout")
+    layout.Parent = scrolling
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Padding = UDim.new(0, 2)
+
+    local function refreshDropdown()
+        for _, child in pairs(scrolling:GetChildren()) do
+            if child:IsA("TextButton") then child:Destroy() end
+        end
+
+        for _, plr in pairs(Players:GetPlayers()) do
+            if plr ~= localPlayer then
+                local btn = Instance.new("TextButton")
+                btn.Size = UDim2.new(1, 0, 0, 24)
+                btn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+                btn.TextColor3 = Color3.new(1,1,1)
+                btn.Text = plr.Name
+                btn.Font = Enum.Font.Gotham
+                btn.TextSize = 16
+                btn.BorderSizePixel = 0
+                btn.Parent = scrolling
+
+                btn.MouseButton1Click:Connect(function()
+                    parentTextbox.Text = plr.Name
+                    dropdownFrame.Visible = false
+                end)
+            end
+        end
+
+        task.wait()
+        scrolling.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y)
+    end
+
+    parentTextbox.Focused:Connect(function()
+        dropdownFrame.Visible = true
+        refreshDropdown()
+    end)
+
+    parentTextbox.FocusLost:Connect(function()
+        task.wait(0.1)
+        dropdownFrame.Visible = false
+    end)
+end
+
+ 
+createScrollableDropdown(tpDropdown)
+createScrollableDropdown(orbitDropdown)
+ 
+
+
+
+ 
+local function startFly()
+    local character = localPlayer.Character
+    if not character then return end
+    hrp = character:FindFirstChild("HumanoidRootPart")
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if not hrp or not humanoid then return end
+
+    flying = true
+    humanoid.PlatformStand = true
+
+    bodyVelocity = Instance.new("BodyVelocity")
+    bodyVelocity.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+    bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+    bodyVelocity.Parent = hrp
+
+    bodyGyro = Instance.new("BodyGyro")
+    bodyGyro.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
+    bodyGyro.P = 10000
+    bodyGyro.CFrame = hrp.CFrame
+    bodyGyro.Parent = hrp
+
+    RunService:BindToRenderStep("Fly", Enum.RenderPriority.Character.Value, function()
+        if not flying or not hrp then return end
+
+        local camCF = workspace.CurrentCamera.CFrame
+        local moveVec = Vector3.new(0,0,0)
+
+        if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+            moveVec = moveVec + camCF.LookVector
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.S) then
+            moveVec = moveVec - camCF.LookVector
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.A) then
+            moveVec = moveVec - camCF.RightVector
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.D) then
+            moveVec = moveVec + camCF.RightVector
+        end
+
+        local upDown = 0
+        if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+            upDown = upDown + 1
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
+            upDown = upDown - 1
+        end
+
+        if moveVec.Magnitude > 0 then
+            moveVec = (moveVec + Vector3.new(0, upDown, 0)).Unit
+            bodyVelocity.Velocity = moveVec * speed
+        else
+            bodyVelocity.Velocity = Vector3.new(0, upDown * speed, 0)
+        end
+
+        bodyGyro.CFrame = CFrame.new(hrp.Position, hrp.Position + camCF.LookVector)
+    end)
+end
+
+local function stopFly()
+    flying = false
+    RunService:UnbindFromRenderStep("Fly")
+    if bodyVelocity then
+        bodyVelocity:Destroy()
+        bodyVelocity = nil
+    end
+    if bodyGyro then
+        bodyGyro:Destroy()
+        bodyGyro = nil
+    end
+    local character = localPlayer.Character
+    if character then
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid.PlatformStand = false
+        end
+    end
+end
+
+flyToggle.MouseButton1Click:Connect(function()
+    if flying then
+        stopFly()
+        flyToggle.Text = "Off"
+        flyToggle.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+    else
+        startFly()
+        flyToggle.Text = "On"
+        flyToggle.BackgroundColor3 = Color3.fromRGB(50, 180, 50)
+    end
+end)
+
+speedSlider.FocusLost:Connect(function(enterPressed)
+    local val = tonumber(speedSlider.Text)
+    if val and val > 0 and val <= 500 then
+        speed = val
+        speedLabel.Text = "Fly Speed: " .. speed
+    else
+        speedSlider.Text = tostring(speed)
+    end
+end)
+
+ 
+tpBtn.MouseButton1Click:Connect(function()
+    local targetName = tpDropdown.Text
+    if targetName == "" then return end
+    local target = Players:FindFirstChild(targetName)
+    if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") and localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        localPlayer.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame
+    else
+        warn("Target player not found or missing HumanoidRootPart")
+    end
+end)
+
+ 
+ 
+local function startSpinbot()
+    spinbotActive = true
+    RunService:BindToRenderStep("Spinbot", Enum.RenderPriority.Character.Value + 1, function()
+        if not spinbotActive then return end
+        if localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local hrp = localPlayer.Character.HumanoidRootPart
+            hrp.CFrame = hrp.CFrame * CFrame.Angles(0, math.rad(spinSpeed), 0)
+        end
+    end)
+end
+
+local function stopSpinbot()
+    spinbotActive = false
+    RunService:UnbindFromRenderStep("Spinbot")
+end
+
+spinToggle.MouseButton1Click:Connect(function()
+    if spinbotActive then
+        stopSpinbot()
+        spinToggle.Text = "Off"
+        spinToggle.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+    else
+        startSpinbot()
+        spinToggle.Text = "On"
+        spinToggle.BackgroundColor3 = Color3.fromRGB(50, 180, 50)
+    end
+end)
+
+spinSpeedSlider.FocusLost:Connect(function()
+    local val = tonumber(spinSpeedSlider.Text)
+    if val and val > 0 and val <= 360 then
+        spinSpeed = val
+        spinSpeedLabel.Text = "Spinbot Speed: " .. spinSpeed
+    else
+        spinSpeedSlider.Text = tostring(spinSpeed)
+    end
+end)
+
+ 
+local function startOrbit()
+    if not orbitTarget or not orbitTarget.Character or not orbitTarget.Character:FindFirstChild("HumanoidRootPart") then return end
+    orbitActive = true
+    orbitAngle = 0
+    RunService:BindToRenderStep("Orbit", Enum.RenderPriority.Character.Value + 2, function()
+        if not orbitActive then return end
+        if localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local hrp = localPlayer.Character.HumanoidRootPart
+            orbitAngle = (orbitAngle + 0.03) % (2 * math.pi)
+            local targetPos = orbitTarget.Character.HumanoidRootPart.Position
+            local offset = Vector3.new(math.cos(orbitAngle) * orbitRadius, 0, math.sin(orbitAngle) * orbitRadius)
+            hrp.CFrame = CFrame.new(targetPos + offset + Vector3.new(0, 5, 0), targetPos)
+        end
+    end)
+end
+
+local function stopOrbit()
+    orbitActive = false
+    RunService:UnbindFromRenderStep("Orbit")
+end
+
+orbitToggle.MouseButton1Click:Connect(function()
+    if orbitActive then
+        stopOrbit()
+        orbitToggle.Text = "Off"
+        orbitToggle.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+    else
+        local targetName = orbitDropdown.Text
+        local target = Players:FindFirstChild(targetName)
+        if target then
+            orbitTarget = target
+            startOrbit()
+            orbitToggle.Text = "On"
+            orbitToggle.BackgroundColor3 = Color3.fromRGB(50, 180, 50)
+        else
+            warn("Orbit target not found")
+        end
+    end
+end)
+
+orbitRadiusSlider.FocusLost:Connect(function()
+    local val = tonumber(orbitRadiusSlider.Text)
+    if val and val >= 5 and val <= 50 then
+        orbitRadius = val
+        orbitRadiusLabel.Text = "Orbit Radius: " .. orbitRadius
+    else
+        orbitRadiusSlider.Text = tostring(orbitRadius)
+    end
+end)
+ 
+local function updatePlayerDropdowns()
+    local names = {}
+    for _, player in pairs(Players:GetPlayers()) do
+        table.insert(names, player.Name)
+    end
+    local function dropdownUpdate(textBox, namesTable)
+        local currentText = textBox.Text
+        textBox.Text = ""
+        wait()
+        textBox.Text = currentText
+    end
+ 
+    dropdownUpdate(tpDropdown, names)
+    dropdownUpdate(orbitDropdown, names)
+end
+
+Players.PlayerAdded:Connect(updatePlayerDropdowns)
+Players.PlayerRemoving:Connect(updatePlayerDropdowns)
+updatePlayerDropdowns()
+
+
+local function createBoxEsp(player)
+    if espBoxes[player] then return end
+    local box = Instance.new("BoxHandleAdornment")
+    box.Name = player.Name .. "_BoxESP"
+    box.Adornee = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    box.AlwaysOnTop = true
+    box.ZIndex = 10
+    box.Size = Vector3.new(4, 6, 4)
+    box.Color3 = Color3.new(1, 1, 1)
+    box.Transparency = 0.5
+    box.Parent = espFolder
+    espBoxes[player] = box
+end
+
+local function removeBoxEsp(player)
+    if espBoxes[player] then
+        espBoxes[player]:Destroy()
+        espBoxes[player] = nil
+    end
+end
+
+local nameLabels = {}
+
+local function createNameEsp(player)
+    if nameLabels[player] then return end
+    local char = player.Character
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = player.Name .. "_NameESP"
+    billboard.Adornee = hrp
+    billboard.Size = UDim2.new(0, 100, 0, 30)
+    billboard.StudsOffset = Vector3.new(0, 3, 0)
+    billboard.AlwaysOnTop = true
+
+    local textLabel = Instance.new("TextLabel")
+    textLabel.BackgroundTransparency = 1
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.Text = player.Name
+    textLabel.TextColor3 = Color3.new(1, 1, 1)
+    textLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+    textLabel.TextStrokeTransparency = 0
+    textLabel.Font = Enum.Font.GothamBold
+    textLabel.TextSize = 18
+    textLabel.Parent = billboard
+
+    billboard.Parent = espFolder
+    nameLabels[player] = billboard
+end
+
+local function removeNameEsp(player)
+    if nameLabels[player] then
+        nameLabels[player]:Destroy()
+        nameLabels[player] = nil
+    end
+end
+
+local function updateEsp()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player == localPlayer then continue end
+        local char = player.Character
+        if not char or not char:FindFirstChild("HumanoidRootPart") then
+            removeBoxEsp(player)
+            removeNameEsp(player)
+            continue
+        end
+        if boxEspOn then
+            createBoxEsp(player)
+            espBoxes[player].Adornee = player.Character.HumanoidRootPart
+        else
+            removeBoxEsp(player)
+        end
+
+        if nameEspOn then
+            createNameEsp(player)
+        else
+            removeNameEsp(player)
+        end
+    end
+end
+
+boxToggle.MouseButton1Click:Connect(function()
+    boxEspOn = not boxEspOn
+    if boxEspOn then
+        boxToggle.Text = "On"
+        boxToggle.BackgroundColor3 = Color3.fromRGB(50, 180, 50)
+    else
+        boxToggle.Text = "Off"
+        boxToggle.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+    end
+    updateEsp()
+end)
+
+nameToggle.MouseButton1Click:Connect(function()
+    nameEspOn = not nameEspOn
+    if nameEspOn then
+        nameToggle.Text = "On"
+        nameToggle.BackgroundColor3 = Color3.fromRGB(50, 180, 50)
+    else
+        nameToggle.Text = "Off"
+        nameToggle.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+    end
+    updateEsp()
+end)
+
+Players.PlayerAdded:Connect(updateEsp)
+Players.PlayerRemoving:Connect(updateEsp)
+RunService.Heartbeat:Connect(updateEsp)
+
+
+updateEsp()
+
